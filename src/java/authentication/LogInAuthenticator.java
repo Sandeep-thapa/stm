@@ -7,10 +7,13 @@ package authentication;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import models.Profile;
 
 /**
  *
@@ -70,8 +73,33 @@ public class LogInAuthenticator extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
-    }
+         try {
+            response.setContentType("text/html");
+            String userName = request.getParameter("username").trim();
+            String Password = request.getParameter("password").trim();
+            System.out.println("got username and password "+userName+" "+Password);
+            Authentication Authentication = new Authentication();
+            boolean result = Authentication.checkAuthentication(userName, Password);
+            
+            if (result) {
+                Profile newUser = Authentication.getUser(userName, Password);
+                HttpSession session = request.getSession();
+                session.setMaxInactiveInterval(30*60);
+                session.setAttribute("user", newUser);
+                response.sendRedirect("chat.html");
+            } else {
+                RequestDispatcher failedDispatcher = getServletContext().getRequestDispatcher("/login.html");
+                PrintWriter out = response.getWriter();
+                out.println("username and password do not match");
+                out.println("\n<a href='index.html'>login here</a>");
+                
+               
+            }       } catch (Exception ex) {
+
+               ex.printStackTrace();
+            
+            }
+       }
 
     /**
      * Returns a short description of the servlet.
